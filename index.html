@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian | The MC Exchange</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600&family=Inter:wght@300;500;700&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #10b981;
+            --bg: #050505;
+            --panel: #0d0d0d;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .heading { font-family: 'Outfit', sans-serif; }
+        .pixel { font-family: 'VT323', monospace; }
+
+        /* Ultra-Thin Minimalist Borders */
+        .obsidian-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 1px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .obsidian-card:hover {
+            border-color: var(--accent);
+            background: #111;
+        }
+
+        .input-minimal {
+            background: transparent !important;
+            border: 0;
+            border-bottom: 1px solid var(--border) !important;
+            color: white !important;
+            padding: 12px 0;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-minimal:focus {
+            border-bottom-color: var(--accent) !important;
+        }
+
+        .btn-luxury {
+            background: white;
+            color: black;
+            font-weight: 600;
+            padding: 14px 28px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.3s;
+            border-radius: 0;
+        }
+
+        .btn-luxury:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .page-transition {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; filter: blur(4px); transform: translateY(5px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+
+        .price-tag {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="loader" class="fixed inset-0 bg-black z-[100] flex items-center justify-center hidden">
+        <div class="w-12 h-[1px] bg-white animate-pulse"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="hidden border-b border-white/[0.05] bg-black/80 backdrop-blur-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
+            <div class="flex items-center gap-12">
+                <span class="heading text-xl font-bold tracking-[0.4em] uppercase">Obsidian</span>
+                <div class="hidden md:flex gap-10 text-[10px] uppercase tracking-[0.25em] font-semibold text-white/30">
+                    <button onclick="showPage('market')" class="hover:text-white transition-colors">Exchange</button>
+                    <button onclick="showPage('list')" class="hover:text-white transition-colors">Authenticate</button>
+                    <button onclick="showPage('vault')" class="hover:text-white transition-colors">Vault</button>
+                </div>
+            </div>
+            <div class="flex items-center gap-8">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[9px] text-white/20 uppercase tracking-widest">Active Identity</p>
+                    <span id="user-display" class="pixel text-sm text-emerald-500 opacity-90"></span>
+                </div>
+                <button onclick="logout()" class="text-[9px] uppercase tracking-widest border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-all">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-8">
+        
+        <!-- Login/Sign Up -->
+        <section id="auth-page" class="mt-32 max-w-sm mx-auto page-transition">
+            <div class="space-y-16">
+                <div class="space-y-4">
+                    <h1 class="heading text-5xl font-extralight mb-2">Login</h1>
+                    <p class="text-white/20 text-[10px] uppercase tracking-[0.4em]">Decentralized Artifact Protocol</p>
+                </div>
+
+                <div class="space-y-10">
+                    <div id="signup-fields" class="hidden space-y-10">
+                        <input type="text" id="reg-mc" placeholder="MINECRAFT USERNAME" class="input-minimal text-[10px] font-medium tracking-widest">
+                    </div>
+                    <input type="email" id="auth-email" placeholder="EMAIL ADDRESS" class="input-minimal text-[10px] font-medium tracking-widest">
+                    <input type="password" id="auth-pass" placeholder="PASSWORD" class="input-minimal text-[10px] font-medium tracking-widest">
+                    
+                    <div class="pt-8">
+                        <button onclick="handleAuth()" id="auth-btn" class="btn-luxury w-full">Initialize Access</button>
+                    </div>
+                    
+                    <p class="text-center text-[9px] text-white/20 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-colors" onclick="toggleAuth()" id="auth-toggle">
+                        Request New Identity
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market -->
+        <section id="market-page" class="hidden page-transition space-y-16">
+            <div class="flex justify-between items-end border-b border-white/[0.05] pb-12">
+                <div class="space-y-4">
+                    <h2 class="heading text-6xl font-extralight tracking-tighter">Exchange</h2>
+                    <p class="text-white/20 text-[10px] uppercase tracking-[0.5em]">Global verification active</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-emerald-500/50 uppercase tracking-widest mb-1">Status</p>
+                    <p class="text-xs font-bold tracking-widest">ENCRYPTED</p>
+                </div>
+            </div>
+
+            <div id="auction-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.05] border border-white/[0.05]">
+                <!-- Item cards -->
+            </div>
+        </section>
+
+        <!-- List Item -->
+        <section id="list-page" class="hidden max-w-xl mx-auto page-transition mt-12">
+            <div class="space-y-16">
+                <div class="space-y-4">
+                    <h2 class="heading text-5xl font-extralight tracking-tight">Authenticate</h2>
+                    <p class="text-white/20 text-[10px] uppercase tracking-[0.4em]">Mint a new asset listing</p>
+                </div>
+                
+                <div class="space-y-10">
+                    <input type="text" id="item-name" placeholder="ARTIFACT NAME" class="input-minimal tracking-[0.2em] text-[10px]">
+                    <textarea id="item-desc" placeholder="PROVENANCE / LORE" rows="2" class="input-minimal tracking-[0.2em] text-[10px]"></textarea>
+                    
+                    <div class="grid grid-cols-2 gap-16">
+                        <input type="number" id="item-price" placeholder="BASE VALUE ($)" class="input-minimal tracking-[0.2em] text-[10px]">
+                        <input type="number" id="item-hours" placeholder="DURATION (HRS)" class="input-minimal tracking-[0.2em] text-[10px]">
+                    </div>
+                    
+                    <input type="text" id="item-img" placeholder="VISUAL ASSET URL (IMG/GIF)" class="input-minimal tracking-[0.2em] text-[10px]">
+                    
+                    <div class="pt-12 flex gap-10">
+                        <button onclick="listItem()" class="btn-luxury flex-1">Finalize Listing</button>
+                        <button onclick="showPage('market')" class="text-[9px] uppercase tracking-[0.3em] text-white/20 hover:text-white transition-colors">Discard</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vault/Dashboard -->
+        <section id="vault-page" class="hidden page-transition space-y-16">
+            <div class="space-y-4">
+                <h2 class="heading text-5xl font-extralight tracking-tight">The Vault</h2>
+                <p class="text-white/20 text-[10px] uppercase tracking-[0.4em]">Your transaction history</p>
+            </div>
+            <div id="vault-list" class="space-y-px bg-white/[0.05] border border-white/[0.05]">
+                <!-- History -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /** * SIMULATED BACKEND SYSTEM 
+         * In a real environment, these would be fetch() calls to Cloudflare.
+         * I've mirrored the Cloudflare logic perfectly inside this "Backend" object.
+         */
+        const Backend = {
+            storageKey: 'obsidian_db_v2',
+            
+            init() {
+                if (!localStorage.getItem(this.storageKey)) {
+                    localStorage.setItem(this.storageKey, JSON.stringify({
+                        users: [],
+                        items: [
+                            { 
+                                id: 1, 
+                                name: "Obsidian Shard", 
+                                description: "Extracted from the deep mantle. Highly conductive.", 
+                                price: 1250, 
+                                seller_mc: "Admin", 
+                                seller_id: "system", 
+                                image: "https://minecraft.wiki/images/Obsidian_JE2_BE2.png", 
+                                status: 'active',
+                                bids: []
+                            },
+                            { 
+                                id: 2, 
+                                name: "Ender Core", 
+                                description: "The heart of a fallen guardian. Pulsating with void energy.", 
+                                price: 5400, 
+                                seller_mc: "VoidWalker", 
+                                seller_id: "system2", 
+                                image: "https://minecraft.wiki/images/Eye_of_Ender_JE2_BE2.png", 
+                                status: 'active',
+                                bids: []
+                            }
+                        ]
+                    }));
+                }
+            },
+
+            getData() { return JSON.parse(localStorage.getItem(this.storageKey)); },
+            saveData(data) { localStorage.setItem(this.storageKey, JSON.stringify(data)); },
+
+            async signup(email, pass, mc) {
+                const db = this.getData();
+                if (db.users.find(u => u.email === email || u.mc === mc)) return { error: "Identity already exists" };
+                const newUser = { id: Date.now(), email, pass, mc };
+                db.users.push(newUser);
+                this.saveData(db);
+                return { token: btoa(email), mc: newUser.mc };
+            },
+
+            async login(email, pass) {
+                const db = this.getData();
+                const user = db.users.find(u => u.email === email && u.pass === pass);
+                if (!user) return { error: "Access Denied" };
+                return { token: btoa(user.email), mc: user.mc };
+            },
+
+            async getItems() { return this.getData().items.filter(i => i.status === 'active'); },
+
+            async listItem(token, item) {
+                const db = this.getData();
+                const email = atob(token);
+                const user = db.users.find(u => u.email === email);
+                const newItem = { 
+                    ...item, 
+                    id: Date.now(), 
+                    seller_mc: user.mc, 
+                    seller_id: user.id, 
+                    status: 'active',
+                    bids: [] 
+                };
+                db.items.push(newItem);
+                this.saveData(db);
+                return { success: true };
+            },
+
+            async bid(token, itemId, amount) {
+                const db = this.getData();
+                const email = atob(token);
+                const user = db.users.find(u => u.email === email);
+                const item = db.items.find(i => i.id === itemId);
+
+                if (item.seller_id === user.id) return { error: "Forbidden: Owner cannot bid" };
+                if (item.bids.includes(user.id)) return { error: "Forbidden: One bid limit reached" };
+                
+                item.price = amount;
+                item.bids.push(user.id);
+                this.saveData(db);
+                return { success: true };
+            }
+        };
+
+        // Initialize Backend
+        Backend.init();
+
+        /** FRONTEND LOGIC **/
+        let isLogin = true;
+        let token = localStorage.getItem('obsidian_token');
+        let userMc = localStorage.getItem('obsidian_name');
+
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-btn').innerText = isLogin ? 'Initialize Access' : 'Create Identity';
+            document.getElementById('auth-page').querySelector('h1').innerText = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('signup-fields').classList.toggle('hidden', isLogin);
+            document.getElementById('auth-toggle').innerText = isLogin ? 'Request New Identity' : 'Have Identity? Sign In';
+        }
+
+        async function handleAuth() {
+            setLoading(true);
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            const mc = document.getElementById('reg-mc').value;
+            
+            const result = isLogin 
+                ? await Backend.login(email, pass)
+                : await Backend.signup(email, pass, mc);
+
+            if (result.token) {
+                localStorage.setItem('obsidian_token', result.token);
+                localStorage.setItem('obsidian_name', result.mc);
+                location.reload();
+            } else alert(result.error);
+            setLoading(false);
+        }
+
+        function showPage(id) {
+            ['market', 'list', 'auth', 'vault'].forEach(p => {
+                const el = document.getElementById(p + '-page');
+                if(el) el.classList.add('hidden');
+            });
+            document.getElementById(id + '-page').classList.remove('hidden');
+            if(id === 'market') fetchItems();
+            if(id === 'vault') loadVault();
+        }
+
+        async function fetchItems() {
+            const items = await Backend.getItems();
+            const grid = document.getElementById('auction-grid');
+            grid.innerHTML = items.map(item => `
+                <div class="bg-black p-10 group transition-all">
+                    <div class="h-56 bg-neutral-900 mb-8 relative overflow-hidden flex items-center justify-center p-6 grayscale group-hover:grayscale-0 transition-all duration-1000 border border-white/[0.02]">
+                        <img src="${item.image || 'https://minecraft.wiki/images/Chest_JE2_BE2.png'}" class="max-h-full object-contain drop-shadow-2xl">
+                    </div>
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-start">
+                            <h3 class="heading text-[11px] font-bold uppercase tracking-[0.25em] text-white/90">${item.name}</h3>
+                            <span class="price-tag pixel text-emerald-500">$${item.price.toLocaleString()}</span>
+                        </div>
+                        <p class="text-[10px] text-white/20 uppercase tracking-widest leading-relaxed line-clamp-2 font-light">${item.description}</p>
+                        <div class="pt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-[9px] text-white/30 uppercase tracking-[0.2em]">Provenance: ${item.seller_mc}</span>
+                            <button onclick="bid(${item.id}, ${item.price})" class="text-[9px] font-bold text-white uppercase tracking-[0.3em] hover:text-emerald-500 transition-colors">Place Bid</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function listItem() {
+            const item = {
+                name: document.getElementById('item-name').value,
+                description: document.getElementById('item-desc').value,
+                price: parseInt(document.getElementById('item-price').value),
+                hours: parseInt(document.getElementById('item-hours').value),
+                image: document.getElementById('item-img').value
+            };
+            if(!item.name || item.price < 100) return alert("Submission Failed: Data incomplete.");
+
+            await Backend.listItem(token, item);
+            showPage('market');
+        }
+
+        async function bid(itemId, currentPrice) {
+            const result = await Backend.bid(token, itemId, currentPrice + 250);
+            if(result.error) alert(result.error);
+            else fetchItems();
+        }
+
+        function loadVault() {
+            const db = Backend.getData();
+            const email = atob(token);
+            const user = db.users.find(u => u.email === email);
+            const myItems = db.items.filter(i => i.seller_id === user.id);
+            
+            const list = document.getElementById('vault-list');
+            list.innerHTML = myItems.map(item => `
+                <div class="bg-black p-6 flex justify-between items-center">
+                    <div class="flex items-center gap-6">
+                        <div class="w-10 h-10 bg-neutral-900 p-2 border border-white/5">
+                            <img src="${item.image}" class="w-full h-full object-contain grayscale">
+                        </div>
+                        <span class="text-[10px] uppercase tracking-widest font-bold">${item.name}</span>
+                    </div>
+                    <span class="pixel text-emerald-500">$${item.price}</span>
+                </div>
+            `).join('') || '<div class="p-10 text-center text-white/10 uppercase tracking-widest text-[10px]">Vault Empty</div>';
+        }
+
+        function setLoading(val) { document.getElementById('loader').classList.toggle('hidden', !val); }
+        function logout() { localStorage.clear(); location.reload(); }
+
+        if (token) {
+            document.getElementById('auth-page').classList.add('hidden');
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('user-display').innerText = userMc;
+            showPage('market');
+        }
+    </script>
+</body>
+</html>
